@@ -20,6 +20,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { FollowModule } from './modules/follow/follow.module';
 import { CommentModule } from './modules/comment/comment.module';
 
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
