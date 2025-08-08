@@ -20,6 +20,9 @@ export class User {
   @Column({ length: 10, default: 'user' })
   role: string;
 
+  @Column()
+  avatar: string;
+
   @OneToMany(() => Comment, (comment) => comment.user)
   comments: Comment[];
 

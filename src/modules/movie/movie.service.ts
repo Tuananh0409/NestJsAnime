@@ -5,6 +5,8 @@ import { Repository } from 'typeorm';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { MovieCategory } from 'src/entities/movie-category.entity';
+import slugify from 'slugify';
+const dayjs = require('dayjs')
 
 @Injectable()
 export class MovieService {
@@ -17,22 +19,94 @@ export class MovieService {
   ) {}
 
 
-  // lấy ra phim theo thể loại
+  private formatTimeAgo(minutes: number): string {
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes} minute(s) ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} hour(s) ago`;
+  const days = Math.floor(hours / 24);
+  return `${days} day(s) ago`;
+}
 
-  async getMoviesByCategorySlug(slug: string, page = 1, limit = 15) {
+  // lấy thông tin của phim khi ở trang anime detail
+  async findMovieDetailBySlug(slug: string) {
+  const movie = await this.movieRepository.findOne({
+    where: { slug },
+    relations: [
+      'comments',
+      'comments.user',
+      'views',
+      'movieCategories',
+      'movieCategories.category',
+    ],
+  });
+
+  if (!movie) throw new Error('Movie not found');
+
+  const totalViews = movie.views?.length || 0;
+  const totalComments = movie.comments?.length || 0;
+
+  const formattedComments = movie.comments.map((comment) => {
+    const now = new Date();
+    const created = new Date(comment.created_at);
+    const diffMs = now.getTime() - created.getTime();
+    const diffMinutes = Math.floor(diffMs / 1000 / 60);
+
+    return {
+      content: comment.content,
+      user: {
+        id: comment.user.id,
+        username: comment.user.username,
+        avatar: comment.user.avatar,
+      },
+      timeAgo: this.formatTimeAgo(diffMinutes),
+    };
+  });
+
+  const genres = movie.movieCategories.map((mc) => mc.category.name);
+
+  // 👉 Định dạng lại release_date và dùng luôn
+  const formattedReleaseDate = dayjs(movie.release_date).format('MMM DD, YYYY');
+
+  return {
+    id: movie.id,
+    title: movie.title,
+    status: movie.status,
+    type: movie.type,
+    description: movie.description,
+    release_date: formattedReleaseDate, 
+    studio: movie.studio,
+    score: movie.score,
+    quality: movie.quality,
+    duration: movie.duration,
+    slug: movie.slug,
+    rating: movie.rating,
+    original_title: movie.original_title,
+    img_url: movie.img_url,
+    totalViews,
+    totalComments,
+    genres,
+    comments: formattedComments,
+  };
+}
+
+  // lấy ra phim theo thể loại
+  async getMoviesByCategorySlug(slug: string, page = 1, limit: number) {
   const offset = (page - 1) * limit;
 
   const query = this.movieCategoryRepository
     .createQueryBuilder('mc')
     .leftJoin('mc.category', 'category')
     .innerJoin('mc.movie', 'movie')
-    .leftJoin('movie.episodes', 'episode')    .leftJoin('movie.comments', 'comment')
+    .leftJoin('movie.episodes', 'episode')
+    .leftJoin('movie.comments', 'comment')
     .leftJoin('movie.views', 'view')
     .where('category.slug = :slug', { slug })
     .select([
       'movie.id AS id',
       'movie.title AS title',
       'movie.img_url AS img_url',
+      'movie.slug AS slug',
       'COUNT(DISTINCT episode.id) AS episodesCount',
       'COUNT(DISTINCT comment.id) AS commentsCount',
       'COUNT(DISTINCT view.id) AS viewsCount',
@@ -65,21 +139,18 @@ export class MovieService {
     },
   };
 }
-
-
-
-
   
   // Lấy ra phim từ những comment mới nhất
   async getMoviesByNewComment(limit?: number) {
   const movies = await this.movieRepository
     .createQueryBuilder('movie')
-    .innerJoin('movie.comments', 'comment') // chỉ lấy phim có comment
-    .leftJoin('movie.views', 'view')        // có thể có hoặc không view
+    .innerJoin('movie.comments', 'comment') 
+    .leftJoin('movie.views', 'view')        
     .select([
       'movie.id AS id',
       'movie.title AS title',
       'movie.img_url AS img_url',
+      'movie.slug AS slug',
       'COUNT(DISTINCT comment.id) AS commentsCount',
       'MAX(comment.created_at) AS lastCommentDate',
       'COUNT(DISTINCT view.id) AS viewsCount',
@@ -91,7 +162,6 @@ export class MovieService {
 
   return movies;
 }
-
 
 
   async create(createMovieDto: CreateMovieDto) {
@@ -148,6 +218,18 @@ export class MovieService {
       where: { id },
       relations: ['movieCategories', 'movieCategories.category'],
     });
+  }
+
+  // Update slug
+  async updateAllSlugs() {
+    const movies = await this.movieRepository.find();
+
+    for (const movie of movies) {
+      movie.slug = slugify(movie.title, { lower: true });
+      await this.movieRepository.save(movie);
+    }
+
+    return { message: 'Updated all slugs successfully', count: movies.length };
   }
 
   findAll() {

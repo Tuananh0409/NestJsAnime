@@ -21,12 +21,16 @@ export class MovieController {
     return this.movieService.findAll();
   }
 
+  @Get('movie-detail/:slug')
+  async getMovieBySlug(@Param('slug') slug: string) {
+    return await this.movieService.findMovieDetailBySlug(slug);
+  }
+
+
   // @Get(':id')
   // findOne(@Param('id') id: number) {
   //   return this.movieService.findOne(id);
   // }
-
-
 
   
   @Get('new-comment')
@@ -45,7 +49,12 @@ export class MovieController {
   const pageNum = parseInt(page) || 1;
   const limitNum = parseInt(limit) || 15;
   return this.movieService.getMoviesByCategorySlug(slug, pageNum, limitNum);
-}
+  }
+  
+  @Get('generate-slugs')
+  generateSlugs() {
+    return this.movieService.updateAllSlugs();
+  }
 
 
 

@@ -6,12 +6,15 @@ import {
   ManyToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  BeforeInsert,
+  BeforeUpdate,
 } from 'typeorm';
 import { Episode } from './episode.entity';
 import { Comment } from './comment.entity';
 import { View } from './view.entity';
 import { MovieCategory } from './movie-category.entity';
 import { Follow } from './follows.entity';
+import slugify from 'slugify';
 
 @Entity()
 export class Movie {
@@ -55,6 +58,15 @@ export class Movie {
   @Column()
   updated_at: Date;
 
+  @Column()
+  slug: string;
+
+  @Column()
+  score: string;
+
+  @Column()
+  original_title: string;
+
   @OneToMany(() => Episode, (episode) => episode.movie)
   episodes: Episode[];
 
@@ -69,6 +81,13 @@ export class Movie {
 
   @OneToMany(() => MovieCategory, (mc) => mc.movie)
   movieCategories: MovieCategory[];
-
+  
+  @BeforeInsert()
+  @BeforeUpdate()
+  generateSlug() {
+    if (this.title) {
+      this.slug = slugify(this.title, {lower: true})
+    }
+  }
   
 }
