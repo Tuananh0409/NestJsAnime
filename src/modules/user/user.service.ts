@@ -1,3 +1,4 @@
+
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -17,5 +18,14 @@ export class UserService {
 
   async findByEmail(email: string) {
     return this.userRepo.findOne({ where: { email } });
+  }
+
+  async findById(id: number) {
+    return this.userRepo.findOne({ where: { id } });
+  }
+
+  async update(id: number, data: Partial<User>) {
+    await this.userRepo.update(id, data);
+    return this.findById(id);
   }
 }

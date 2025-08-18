@@ -1,8 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
+import { User } from 'src/entities/user.entity';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -12,31 +11,55 @@ export class AuthService {
     private readonly userService: UserService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: User) {
     const hash = await bcrypt.hash(dto.password, 10);
     return this.userService.create({ ...dto, password: hash, role: 'user' });
   }
 
-  async login(dto: LoginDto) {
+  async login(dto: User) {
     const user = await this.userService.findByEmail(dto.email);
     if (!user || !(await bcrypt.compare(dto.password, user.password))) {
       throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
     }
+
     const payload = { sub: user.id, email: user.email, role: user.role };
-    const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
-    const refreshToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+    const accessToken = this.jwtService.sign(payload, {
+      secret: process.env.JWT_ACCESS_SECRET,
+      expiresIn: '15m',
+    });
+
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: process.env.JWT_REFRESH_SECRET,
+      expiresIn: '7d',
+    });
+
+    // lưu refreshToken hash vào DB (tùy bạn dùng bcrypt hoặc lưu plain trong dev)
+    const hashedRefresh = await bcrypt.hash(refreshToken, 10);
+    await this.userService.update(user.id, { hashedRefreshToken: hashedRefresh });
+
     return { accessToken, refreshToken, user };
   }
 
   async refreshToken(token: string): Promise<any> {
     try {
       const payload = this.jwtService.verify(token, {
-        secret: process.env.JWT_REFRESH_SECRET, // đảm bảo bạn có biến này
+        secret: process.env.JWT_REFRESH_SECRET,
       });
 
+      const user = await this.userService.findById(payload.sub);
+      if (!user || !user.hashedRefreshToken) {
+        throw new UnauthorizedException('Refresh token không tồn tại');
+      }
+
+      const isMatch = await bcrypt.compare(token, user.hashedRefreshToken);
+      if (!isMatch) {
+        throw new UnauthorizedException('Refresh token không hợp lệ');
+      }
+
       const newAccessToken = this.jwtService.sign(
-        { userId: payload.userId, email: payload.email },
-        { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' }
+        { sub: user.id, email: user.email, role: user.role },
+        { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' },
       );
 
       return { accessToken: newAccessToken };

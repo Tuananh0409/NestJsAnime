@@ -3,20 +3,19 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   constructor() {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: 'your_jwt_secret_key', // nên lấy từ process.env.JWT_SECRET
+      secretOrKey: process.env.JWT_ACCESS_SECRET || 'default_secret', // ép kiểu chắc chắn là string
     });
   }
 
   async validate(payload: any) {
-    // Đây là user trả về trong req.user
     return {
       userId: payload.sub,
-      username: payload.username,
+      email: payload.email,
       role: payload.role,
     };
   }
