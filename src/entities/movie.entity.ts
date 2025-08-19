@@ -3,9 +3,6 @@ import {
   PrimaryGeneratedColumn,
   Column,
   OneToMany,
-  ManyToMany,
-  CreateDateColumn,
-  UpdateDateColumn,
   BeforeInsert,
   BeforeUpdate,
 } from 'typeorm';
@@ -58,7 +55,7 @@ export class Movie {
   @Column()
   updated_at: Date;
 
-  @Column()
+  @Column({unique: true})
   slug: string;
 
   @Column()

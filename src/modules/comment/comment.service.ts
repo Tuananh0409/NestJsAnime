@@ -10,7 +10,7 @@ export class CommentService {
         @InjectRepository(Comment) private readonly commentRepository: Repository<Comment>
     ){}
 
-    async create(createCommentDto: CreateCommentDto){
+    async create(createCommentDto: CreateCommentDto) {
         const comment = await this.commentRepository.create({
             user: {id: createCommentDto.user_id},
             movie: {id: createCommentDto.movie_id},

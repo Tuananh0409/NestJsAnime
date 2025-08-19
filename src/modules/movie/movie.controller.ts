@@ -21,11 +21,24 @@ export class MovieController {
     return this.movieService.findAll();
   }
 
+  @Get('top-views')
+  async getTopViewsDemo(
+    @Query('period') period: 'day' | 'week' | 'month' | 'year'
+  ) {
+    return this.movieService.findMovieByTopView(period);
+  }
+
+
   @Get('movie-detail/:slug')
   async getMovieBySlug(@Param('slug') slug: string) {
     return await this.movieService.findMovieDetailBySlug(slug);
   }
 
+
+  @Get('watching/:slug')
+  async getMovieWatchingData(@Param('slug') slug: string) {
+    return await this.movieService.findMovieWatchingData(slug);
+  }
 
   // @Get(':id')
   // findOne(@Param('id') id: number) {
@@ -39,6 +52,19 @@ export class MovieController {
   ) {
     return  this.movieService.getMoviesByNewComment(limit ? +limit : undefined)
   }
+
+@Get('recently-added-shows')
+getRecentlyAdded(
+  @Query('page') page?: string,
+  @Query('limit') limit?: string
+) {
+  return this.movieService.getRecentlyAddedShows(
+    page ? parseInt(page, 10) : 1,
+    limit ? parseInt(limit, 10) : undefined
+  );
+}
+
+
 
   @Get('category/:slug')
   getMoviesByCategory(

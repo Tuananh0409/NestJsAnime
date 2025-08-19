@@ -88,7 +88,75 @@ export class MovieService {
     genres,
     comments: formattedComments,
   };
+  }
+  
+  async findMovieWatchingData(slug: string) {
+  const movie = await this.movieRepository.findOne({
+    where: { slug },
+    relations: ['episodes', 'comments', 'comments.user'],
+  });
+
+  if (!movie) throw new Error('Movie not found');
+
+  const formattedComments = movie.comments.map(comment => ({
+    content: comment.content,
+    user: {
+      id: comment.user.id,
+      username: comment.user.username,
+      avatar: comment.user.avatar,
+    },
+    timeAgo: this.formatTimeAgo(
+      Math.floor((Date.now() - new Date(comment.created_at).getTime()) / 60000)
+    ),
+  }));
+
+  return {
+    episodes: movie.episodes, // có thể rỗng nếu chưa có tập
+    comments: formattedComments,
+  };
 }
+
+  // Top phim theo lượt view (theo ngày, tuần, tháng, năm)
+  // Top phim theo lượt view (theo ngày, tuần, tháng, năm)
+async findMovieByTopView(period: 'day' | 'week' | 'month' | 'year') {
+  // Xác định điều kiện thời gian cho JOIN
+  let timeCondition = '';
+  if (period === 'day') timeCondition = 'view.viewed_at >= NOW() - INTERVAL 1 DAY';
+  else if (period === 'week') timeCondition = 'view.viewed_at >= NOW() - INTERVAL 7 DAY';
+  else if (period === 'month') timeCondition = 'view.viewed_at >= NOW() - INTERVAL 1 MONTH';
+  else if (period === 'year') timeCondition = 'view.viewed_at >= NOW() - INTERVAL 1 YEAR';
+
+  // Build query
+  const query = this.movieRepository
+    .createQueryBuilder('movie')
+    .innerJoin('movie.views', 'view', timeCondition)
+    .leftJoin('movie.episodes', 'episode')
+    .select([
+      'movie.id AS id',
+      'movie.title AS title',
+      'movie.img_url AS img_url',
+      'movie.slug AS slug',
+      'COUNT(DISTINCT view.id) AS viewsCount',
+      'COUNT(DISTINCT episode.id) AS episodesCount',
+    ])
+    .groupBy('movie.id')
+    .orderBy('viewsCount', 'DESC');
+
+  // Lấy tất cả phim, sẽ random số lượng
+  const movies = await query.getRawMany();
+
+  // Random 1-6 phim giống demo
+  const maxDisplay = 6;
+  const minDisplay = 2;
+  const randomCount = Math.min(
+    Math.floor(Math.random() * (maxDisplay - minDisplay + 1)) + minDisplay,
+    movies.length
+  );
+
+  return movies.slice(0, randomCount);
+}
+
+
 
   // lấy ra phim theo thể loại
   async getMoviesByCategorySlug(slug: string, page = 1, limit: number) {
@@ -161,7 +229,47 @@ export class MovieService {
     .getRawMany();
 
   return movies;
-}
+  }
+  
+  async getRecentlyAddedShows(page?: number, limit?: number) {
+    const query = this.movieRepository
+      .createQueryBuilder('movie')
+      .leftJoinAndSelect('movie.episodes', 'episode')
+      .leftJoinAndSelect('movie.comments', 'comment')
+      // Thêm select cho trường tính thời gian mới nhất, để sắp xếp
+      .addSelect(`GREATEST(COALESCE(UNIX_TIMESTAMP(movie.updated_at), 0), UNIX_TIMESTAMP(movie.created_at))`, 'last_activity')
+      .orderBy('last_activity', 'DESC');
+
+    if (limit && !isNaN(limit)) {
+      query.take(limit);
+      if (page && !isNaN(page) && page > 0) {
+        query.skip((page - 1) * limit);
+      }
+    }
+
+    const [movies, total] = await query.getManyAndCount();
+
+    return {
+      data: movies.map(movie => ({
+        id: movie.id,
+        title: movie.title,
+        slug: movie.slug,
+        img_url: movie.img_url,
+        episodesCount: String(movie.episodes?.length || 0),
+        commentsCount: String(movie.comments?.length || 0),
+        viewsCount: String(movie.views || 0),
+        created_at: dayjs(movie.created_at).format('DD/MM/YYYY HH:mm'),
+        updated_at: movie.updated_at ? dayjs(movie.updated_at).format('DD/MM/YYYY HH:mm') : null,
+      })),
+      pagination: {
+        page: page || 1,
+        limit: limit || total,
+        total,
+        totalPages: limit ? Math.ceil(total / limit) : 1,
+      },
+    };
+  }
+
 
 
   async create(createMovieDto: CreateMovieDto) {
@@ -234,7 +342,8 @@ export class MovieService {
 
   findAll() {
     return this.movieRepository.find({
-    relations: ['movieCategories', 'movieCategories.category', 'episodes', 'comments'],
+      relations: ['movieCategories', 'movieCategories.category', 'episodes', 'comments'],
+      
 });
 
   }
