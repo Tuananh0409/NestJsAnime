@@ -1,18 +1,23 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
-@Controller('comment')
+@Controller('comments')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
-  @Post()
-  create(@Body() dto: CreateCommentDto) {
-    return this.commentService.create(dto);
+  @Get()
+  async findAll() {
+    return this.commentService.findAll();
   }
 
-  @Get('movie/:id')
-  findByMovieId(@Param('id') id: number){
-    return this.commentService.findByMovieId(id)
+  @Post()
+  async create(@Body() body: CreateCommentDto) {
+    return this.commentService.create(body);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
+    return this.commentService.delete(Number(id));
   }
 }

@@ -2,6 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 import { Comment } from './comment.entity';
 import { View } from './view.entity';
 import { Follow } from './follows.entity';
+import { CommentBlog } from './commentblog.entity';
 
 @Entity()
 export class User {
@@ -14,7 +15,7 @@ export class User {
   @Column({ length: 512 })
   password: string;
 
-  @Column({ length: 512 })
+  @Column({ length: 512, unique: true })
   email: string;
 
   @Column({ length: 10, default: 'user' })
@@ -28,7 +29,14 @@ export class User {
 
   @OneToMany(() => View, (view) => view.user)
   views: View[];
+  
+  @OneToMany(() => CommentBlog, (commentBlog) => commentBlog.user)
+  comment: CommentBlog[];
 
   @OneToMany(() => Follow, (follow) => follow.user)
   follows: Follow[];
+
+  @Column({ nullable: true })
+  hashedRefreshToken?: string;
+
 }

@@ -1,30 +1,64 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Comment } from 'src/entities/comment.entity';
 import { Repository } from 'typeorm';
+import { Comment } from '../../entities/comment.entity';
+import { User } from '../../entities/user.entity';
+import { Movie } from '../../entities/movie.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
 
 @Injectable()
 export class CommentService {
-    constructor(
-        @InjectRepository(Comment) private readonly commentRepository: Repository<Comment>
-    ){}
+  constructor(
+    @InjectRepository(Comment)
+    private readonly commentRepo: Repository<Comment>,
 
-    async create(createCommentDto: CreateCommentDto) {
-        const comment = await this.commentRepository.create({
-            user: {id: createCommentDto.user_id},
-            movie: {id: createCommentDto.movie_id},
-            created_at: new Date(),
-            content: createCommentDto.content
-        });
-        return this.commentRepository.save(comment)
-    }
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
 
-    async findByMovieId(movie_id: number){
-        return this.commentRepository.find({
-            where:{movie: {id: movie_id}},
-            relations: ['user'],
-            order: {created_at: 'DESC'}
-        })
-    }
+    @InjectRepository(Movie)
+    private readonly movieRepo: Repository<Movie>,
+  ) {}
+
+  async findAll(): Promise<any[]> {
+    const comments = await this.commentRepo.find({
+      relations: ['user', 'movie'],
+    });
+
+    return comments.map((comment) => ({
+      id: comment.id,
+      content: comment.content,
+      created_at: comment.created_at,
+      user: { id: comment.user.id },
+      movie: { id: comment.movie.id },
+    }));
+  }
+
+  async create(data: CreateCommentDto): Promise<any> {
+    const user = await this.userRepo.findOne({ where: { id: data.user_id } });
+    const movie = await this.movieRepo.findOne({ where: { id: data.movie_id } });
+
+    if (!user) throw new NotFoundException('User not found');
+    if (!movie) throw new NotFoundException('Movie not found');
+
+    const comment = this.commentRepo.create({
+      content: data.content,
+      created_at: new Date(),
+      user,
+      movie,
+    });
+
+    const saved = await this.commentRepo.save(comment);
+
+    return {
+      id: saved.id,
+      content: saved.content,
+      created_at: saved.created_at,
+      user: { id: user.id },
+      movie: { id: movie.id },
+    };
+  }
+
+  async delete(id: number): Promise<void> {
+    await this.commentRepo.delete(id);
+  }
 }

@@ -19,6 +19,8 @@ import { MovieCategoryModule } from './modules/movie-category/movie-category.mod
 import { AuthModule } from './modules/auth/auth.module';
 import { FollowModule } from './modules/follow/follow.module';
 import { CommentModule } from './modules/comment/comment.module';
+import { Blog } from './entities/blog.entity';
+import { CommentBlog } from './entities/commentblog.entity';
 
 @Module({
   imports: [
@@ -29,7 +31,7 @@ import { CommentModule } from './modules/comment/comment.module';
       username: 'root',
       password: '',
       database: 'webanime',
-      entities: [User, View, Movie, MovieCategory, Comment, Follow, Episode, Category],
+      entities: [User, View, Movie, MovieCategory, Comment, Follow, Episode, Category, Blog, CommentBlog],
       synchronize: true, 
     }),
     UserModule,
@@ -41,6 +43,7 @@ import { CommentModule } from './modules/comment/comment.module';
     AuthModule,
     FollowModule,
     CommentModule,
+   
   ],
   controllers: [AppController],
   providers: [AppService],
