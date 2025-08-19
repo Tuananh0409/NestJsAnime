@@ -30,4 +30,8 @@ export class AuthController {
       user: req.user,
     };
   }
+  @Get('users')
+  async getAllUsers() {
+    return this.authService.getAllUsers();
+  }
 }

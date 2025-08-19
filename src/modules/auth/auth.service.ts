@@ -67,4 +67,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
+  async getAllUsers() {
+  return this.userService.findAll(); // Gọi qua UserService
+}
+
 }

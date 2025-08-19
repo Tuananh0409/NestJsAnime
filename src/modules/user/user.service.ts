@@ -1,4 +1,3 @@
-
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -27,5 +26,10 @@ export class UserService {
   async update(id: number, data: Partial<User>) {
     await this.userRepo.update(id, data);
     return this.findById(id);
+  }
+
+  // 👇 Hàm lấy tất cả user
+  async findAll(): Promise<User[]> {
+    return this.userRepo.find();
   }
 }
