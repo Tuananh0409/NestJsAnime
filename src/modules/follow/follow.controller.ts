@@ -15,11 +15,12 @@ export class FollowController {
   unfollow(@Body() dto: CreateFollowDto){
     return this.followService.unFollowMovie(dto)
   }
-
+  
   @Get(':idUser')
   getFollowByUser(@Param('idUser') idUser: number){
     return this.followService.getFollowByUser(idUser);
   }
-
+  
+  
   
 }

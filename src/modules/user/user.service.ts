@@ -32,4 +32,7 @@ export class UserService {
   async findAll(): Promise<User[]> {
     return this.userRepo.find();
   }
+  async remove(id: number): Promise<void> {
+    await this.userRepo.delete(id);
+  }
 }

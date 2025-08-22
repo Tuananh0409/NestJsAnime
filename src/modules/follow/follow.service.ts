@@ -33,6 +33,7 @@ export class FollowService {
             message: "Unfollow successfully"
         }
     }
+    
 
     async getFollowByUser(idUser: number){
         return this.followRepository.find({
@@ -42,4 +43,5 @@ export class FollowService {
             relations: ['movie']
         })
     }
+    
 }
