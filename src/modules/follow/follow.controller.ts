@@ -6,19 +6,15 @@ import { CreateFollowDto } from './dto/create-follow.dto';
 export class FollowController {
   constructor(private readonly followService: FollowService) {}
 
-  @Post()
-  create(@Body() dto: CreateFollowDto){
-    return this.followService.followMovie(dto)
-  }
-
-  @Delete()
-  unfollow(@Body() dto: CreateFollowDto){
-    return this.followService.unFollowMovie(dto)
-  }
-
+  
   @Get(':idUser')
   getFollowByUser(@Param('idUser') idUser: number){
     return this.followService.getFollowByUser(idUser);
+  }
+
+  @Post('toggle')
+  async toggleFollow(@Body() createFollowDto: CreateFollowDto) {
+    return this.followService.toggleFollowMovie(createFollowDto);
   }
 
   

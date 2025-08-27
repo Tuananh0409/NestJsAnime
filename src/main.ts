@@ -4,7 +4,9 @@ import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ 
+  transform: true,
+}));
   app.enableCors({
     origin: true // hoặc true để cho phép tất cả
   });

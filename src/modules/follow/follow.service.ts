@@ -10,28 +10,27 @@ export class FollowService {
         @InjectRepository(Follow) private readonly followRepository: Repository<Follow>
     ){}
 
-    async followMovie(createFollow: CreateFollowDto){
-        const exist = await this.followRepository.findOne({
-            where: {
-                user_id: createFollow.user_id,
-                movie_id: createFollow.movie_id
-            }
-        })
+   async toggleFollowMovie(createFollow: CreateFollowDto) {
+    const exist = await this.followRepository.findOne({
+        where: {
+        user_id: createFollow.user_id,
+        movie_id: createFollow.movie_id,
+        },
+    });
 
-        if(exist) return {message: 'Already followed'}
-
-        const follow = this.followRepository.create(createFollow)
-        return this.followRepository.save(follow)
-    }
-
-    async unFollowMovie(createFollow: CreateFollowDto){
+    if (exist) {
+        // Nếu đã tồn tại => unfollow
         await this.followRepository.delete({
-            user_id: createFollow.user_id,
-            movie_id: createFollow.movie_id
-        })
-        return {
-            message: "Unfollow successfully"
-        }
+        user_id: createFollow.user_id,
+        movie_id: createFollow.movie_id,
+        });
+        return { message: "Unfollow successfully", status: false };
+    } else {
+        // Nếu chưa tồn tại => follow
+        const follow = this.followRepository.create(createFollow);
+        await this.followRepository.save(follow);
+        return { message: "Follow successfully", status: true };
+    }
     }
 
     async getFollowByUser(idUser: number){

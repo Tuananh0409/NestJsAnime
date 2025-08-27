@@ -32,9 +32,9 @@ export class CommentService {
       movie: { id: comment.movie.id },
     }));
   }
-
-  async create(data: CreateCommentDto): Promise<any> {
-    const user = await this.userRepo.findOne({ where: { id: data.user_id } });
+  
+  async create(data: CreateCommentDto, userId: number): Promise<any> {
+    const user = await this.userRepo.findOne({ where: { id: userId  } });
     const movie = await this.movieRepo.findOne({ where: { id: data.movie_id } });
 
     if (!user) throw new NotFoundException('User not found');
@@ -53,8 +53,8 @@ export class CommentService {
       id: saved.id,
       content: saved.content,
       created_at: saved.created_at,
-      user: { id: user.id },
-      movie: { id: movie.id },
+      user: { id: user.id, username: user.username },
+      movie: { id: movie.id, title: movie.title },
     };
   }
 

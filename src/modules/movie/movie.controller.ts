@@ -1,7 +1,9 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { MovieService } from './movie.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
+import { JwtAuthGuard } from '../auth/jwt.guard';
+import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard';
 
 @Controller('movie')
 export class MovieController {
@@ -28,10 +30,14 @@ export class MovieController {
     return this.movieService.findMovieByTopView(period);
   }
 
-
+   @UseGuards(OptionalJwtAuthGuard)
   @Get('movie-detail/:slug')
-  async getMovieBySlug(@Param('slug') slug: string) {
-    return await this.movieService.findMovieDetailBySlug(slug);
+  async getMovieBySlug(
+    @Param('slug') slug: string,
+    @Req() req: any
+  ) {
+    const userId = req.user?.id || null; // có thể null nếu chưa login
+    return await this.movieService.findMovieDetailBySlug(slug, userId);
   }
 
 
@@ -64,8 +70,6 @@ getRecentlyAdded(
   );
 }
 
-
-
   @Get('category/:slug')
   getMoviesByCategory(
   @Param('slug') slug: string,
@@ -75,6 +79,15 @@ getRecentlyAdded(
   const pageNum = parseInt(page) || 1;
   const limitNum = parseInt(limit) || 15;
   return this.movieService.getMoviesByCategorySlug(slug, pageNum, limitNum);
+  }
+
+  @Get('search')
+  async searchMovies(
+    @Query('q') keyword: string,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+  ) {
+    return this.movieService.searchMovies(keyword, Number(page), Number(limit));
   }
   
   @Get('generate-slugs')

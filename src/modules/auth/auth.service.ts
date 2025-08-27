@@ -12,8 +12,19 @@ export class AuthService {
   ) {}
 
   async register(dto: User) {
-    const hash = await bcrypt.hash(dto.password, 10);
-    return this.userService.create({ ...dto, password: hash, role: 'user' });
+    const checkEmail = await this.userService.findByEmail(dto.email)
+    if (!checkEmail) {
+      const hash = await bcrypt.hash(dto.password, 10);
+      this.userService.create({ ...dto, password: hash, role: 'user' });
+      return {
+        success: true,
+        message: "Register successfully"
+      }
+    }
+    return {
+      success: false,
+      message: "Email đã tồn tại, vui lòng nhập email khác"
+    }
   }
 
   async login(dto: User) {
@@ -26,7 +37,7 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_ACCESS_SECRET,
-      expiresIn: '15m',
+      expiresIn: '30m',
     });
 
     const refreshToken = this.jwtService.sign(payload, {
@@ -59,7 +70,7 @@ export class AuthService {
 
       const newAccessToken = this.jwtService.sign(
         { sub: user.id, email: user.email, role: user.role },
-        { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' },
+        { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '30m' },
       );
 
       return { accessToken: newAccessToken };

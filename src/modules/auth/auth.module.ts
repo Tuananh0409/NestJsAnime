@@ -9,13 +9,15 @@ import { UserModule } from '../user/user.module'; // Giả sử bạn có UsersM
 
 @Module({
   imports: [
-    PassportModule,
-    JwtModule.register({
-      secret: 'your_jwt_secret_key', // hoặc dùng ConfigModule để lấy
+  PassportModule,
+  JwtModule.registerAsync({
+    useFactory: () => ({
+      secret: process.env.JWT_ACCESS_SECRET || 'default_secret',
       signOptions: { expiresIn: '1d' },
     }),
-    UserModule, // Nếu JwtStrategy cần UsersService
-  ],
+  }),
+  UserModule,
+],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
   exports: [AuthService],

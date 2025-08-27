@@ -1,6 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { JwtAuthGuard } from '../auth/jwt.guard';
 
 @Controller('comments')
 export class CommentController {
@@ -11,10 +12,17 @@ export class CommentController {
     return this.commentService.findAll();
   }
 
-  @Post()
-  async create(@Body() body: CreateCommentDto) {
-    return this.commentService.create(body);
-  }
+@UseGuards(JwtAuthGuard)
+@Post()
+async create(@Body() data: CreateCommentDto, @Req() req) {
+  const userId = Number(req.user.id); // lấy user từ token
+
+  return this.commentService.create(
+    data,
+   userId, // tự gắn user_id vào data gửi xuống service
+  );
+}
+
 
   @Delete(':id')
   async delete(@Param('id') id: string) {
