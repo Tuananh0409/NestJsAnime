@@ -20,6 +20,10 @@ export class MovieController {
   findAll() {
     return this.movieService.findAll();
   }
+  // GET movies 
+  @Get() async getAll() { return this.movieService.getAllMoviesWithEpisodesCount(); }
+ // GET /movies/:id 
+  @Get(':id') async getOne(@Param('id') id: number) { return this.movieService.getMovieWithEpisodes(id); }
 
   @Get('top-views')
   async getTopViewsDemo(

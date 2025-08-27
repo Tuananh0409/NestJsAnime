@@ -116,6 +116,8 @@ export class MovieService {
   };
 }
 
+
+
   // Top phim theo lượt view (theo ngày, tuần, tháng, năm)
   // Top phim theo lượt view (theo ngày, tuần, tháng, năm)
 async findMovieByTopView(period: 'day' | 'week' | 'month' | 'year') {
@@ -156,7 +158,31 @@ async findMovieByTopView(period: 'day' | 'week' | 'month' | 'year') {
   return movies.slice(0, randomCount);
 }
 
+ async getAllMoviesWithEpisodesCount() {
+    return this.movieRepository
+      .createQueryBuilder('movie')
+      .leftJoinAndSelect('movie.episodes', 'episode')
+      .loadRelationCountAndMap('movie.episodesCount', 'movie.episodes')
+      .getMany();
+  }
 
+  /**
+   * Lấy chi tiết 1 movie + danh sách episodes
+   */
+  async getMovieWithEpisodes(id: number) {
+    const movie = await this.movieRepository.findOne({
+      where: { id },
+      relations: ['episodes'],
+    });
+
+    if (!movie) {
+      throw new NotFoundException(`Movie with id ${id} not found`);
+    }
+
+    return movie;
+  }
+
+  
 
   // lấy ra phim theo thể loại
   async getMoviesByCategorySlug(slug: string, page = 1, limit: number) {
