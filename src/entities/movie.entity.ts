@@ -55,7 +55,7 @@ export class Movie {
   @Column()
   updated_at: Date;
 
-  @Column({unique: true})
+  @Column()
   slug: string;
 
   @Column()

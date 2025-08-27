@@ -32,6 +32,7 @@ export class FollowService {
         return { message: "Follow successfully", status: true };
     }
     }
+    
 
     async getFollowByUser(idUser: number){
         return this.followRepository.find({
@@ -41,4 +42,5 @@ export class FollowService {
             relations: ['movie']
         })
     }
+    
 }

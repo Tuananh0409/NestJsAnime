@@ -1,3 +1,4 @@
+// auth.service.ts
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
@@ -45,7 +46,6 @@ export class AuthService {
       expiresIn: '7d',
     });
 
-    // lưu refreshToken hash vào DB (tùy bạn dùng bcrypt hoặc lưu plain trong dev)
     const hashedRefresh = await bcrypt.hash(refreshToken, 10);
     await this.userService.update(user.id, { hashedRefreshToken: hashedRefresh });
 
@@ -78,8 +78,19 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
   }
+
   async getAllUsers() {
-  return this.userService.findAll(); // Gọi qua UserService
+    return this.userService.findAll();
+  }
+
+  // ✅ Sửa user
+async updateUser(id: string, updateData: Partial<User>) {
+  return this.userService.update(+id, updateData); // ép kiểu
 }
 
+// ✅ Xóa user
+async deleteUser(id: string) {
+  await this.userService.remove(+id); // gọi đúng hàm trong userService
+  return { message: 'User deleted successfully' };
+}
 }

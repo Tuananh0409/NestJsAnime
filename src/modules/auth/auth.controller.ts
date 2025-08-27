@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Get, Req } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Req, Put, Param, Delete  } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt.guard';
 import { User } from 'src/entities/user.entity';
@@ -33,5 +33,16 @@ export class AuthController {
   @Get('users')
   async getAllUsers() {
     return this.authService.getAllUsers();
+  }
+  // ✅ Sửa user
+  @Put('users/:id')
+  async updateUser(@Param('id') id: string, @Body() updateData: Partial<User>) {
+    return this.authService.updateUser(id, updateData);
+  }
+
+  // ✅ Xóa user
+  @Delete('users/:id')
+  async deleteUser(@Param('id') id: string) {
+    return this.authService.deleteUser(id);
   }
 }
