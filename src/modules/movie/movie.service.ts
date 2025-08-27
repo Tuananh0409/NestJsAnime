@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Movie } from 'src/entities/movie.entity';
 import { Repository } from 'typeorm';
@@ -273,32 +273,39 @@ async findMovieByTopView(period: 'day' | 'week' | 'month' | 'year') {
 
 
   async create(createMovieDto: CreateMovieDto) {
-    const { categoryIds, ...movieData } = createMovieDto;
+  const { categoryIds, ...movieData } = createMovieDto;
 
-    // B1: Tạo movie trước
-    const movie = this.movieRepository.create({
-      ...movieData,
-      created_at: new Date()
-    });
-    await this.movieRepository.save(movie);
+  // B1: Tạo slug
+  const slug = slugify(movieData.title, { lower: true, strict: true });
 
-    // B2: Nếu có categoryIds thì thêm các bản ghi movie_category
-    if (categoryIds && categoryIds.length > 0) {
-      const movieCategories = categoryIds.map((categoryId) =>
-        this.movieCategoryRepository.create({
-          movie_id: movie.id,
-          category_id: categoryId,
-        }),
-      );
-      await this.movieCategoryRepository.save(movieCategories);
-    }
+  // B2: Tạo movie
+  const movie = this.movieRepository.create({
+    ...movieData,
+    slug,
+    created_at: new Date(),
+    updated_at: new Date(),
+  });
 
-    // B3: Trả về movie kèm quan hệ
-    return this.movieRepository.findOne({
-      where: { id: movie.id },
-      relations: ['movieCategories', 'movieCategories.category'],
-    });
+  await this.movieRepository.save(movie);
+
+  // B3: Nếu có categoryIds thì thêm các bản ghi movie_category
+  if (categoryIds && categoryIds.length > 0) {
+    const movieCategories = categoryIds.map((categoryId) =>
+      this.movieCategoryRepository.create({
+        movie_id: movie.id,
+        category_id: categoryId,
+      }),
+    );
+    await this.movieCategoryRepository.save(movieCategories);
   }
+
+  // B4: Trả về movie kèm quan hệ
+  return this.movieRepository.findOne({
+    where: { id: movie.id },
+    relations: ['movieCategories', 'movieCategories.category'],
+  });
+}
+
 
   async updateByCategory(id: number, updateMovieDto: UpdateMovieDto) {
     const { categoryIds, ...movieData } = updateMovieDto;
@@ -361,9 +368,20 @@ async findMovieByTopView(period: 'day' | 'week' | 'month' | 'year') {
   }
 
   async update(id: number, data: UpdateMovieDto) {
-    await this.movieRepository.update(id, data);
-    return this.findOne(id);
+  const movie = await this.movieRepository.preload({
+    id,
+    ...data,
+    updated_at: new Date(),
+  });
+
+  if (!movie) {
+    throw new NotFoundException(`Movie with id ${id} not found`);
   }
+
+  return this.movieRepository.save(movie);
+}
+
+
 
   remove(id: number) {
     return this.movieRepository.delete(id);
