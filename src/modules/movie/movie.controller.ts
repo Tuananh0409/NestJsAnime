@@ -18,10 +18,11 @@ export class MovieController {
   // createByCategory(@Body() dto: CreateMovieDto) {
   //   return this.movieService.createByCategory(dto);
   // }
-  @Get()
-  findAll() {
-    return this.movieService.findAll();
-  }
+  // @Get()
+  // findAll() {
+  //   return this.movieService.findAll();
+  // }
+
 
   @Get('top-views')
   async getTopViewsDemo(
@@ -58,6 +59,11 @@ export class MovieController {
   ) {
     return  this.movieService.getMoviesByNewComment(limit ? +limit : undefined)
   }
+
+    // GET movies 
+  @Get() async getAll() { return this.movieService.getAllMoviesWithEpisodesCount(); }
+ // GET /movies/:id 
+
 
 @Get('recently-added-shows')
 getRecentlyAdded(
@@ -96,6 +102,7 @@ getRecentlyAdded(
   }
 
 
+  @Get('list-episode/:id') async getOne(@Param('id') id: number) { return this.movieService.getMovieWithEpisodes(id); }
 
   @Put(':id')
   update(@Param('id') id: number, @Body() dto: UpdateMovieDto) {
