@@ -157,31 +157,6 @@ async findMovieByTopView(period: 'day' | 'week' | 'month' | 'year') {
 
   return movies.slice(0, randomCount);
 }
-
- async getAllMoviesWithEpisodesCount() {
-    return this.movieRepository
-      .createQueryBuilder('movie')
-      .leftJoinAndSelect('movie.episodes', 'episode')
-      .loadRelationCountAndMap('movie.episodesCount', 'movie.episodes')
-      .getMany();
-  }
-
-  /**
-   * Lấy chi tiết 1 movie + danh sách episodes
-   */
-  async getMovieWithEpisodes(id: number) {
-    const movie = await this.movieRepository.findOne({
-      where: { id },
-      relations: ['episodes'],
-    });
-
-    if (!movie) {
-      throw new NotFoundException(`Movie with id ${id} not found`);
-    }
-
-    return movie;
-  }
-
   
 
   // lấy ra phim theo thể loại
@@ -255,6 +230,30 @@ async findMovieByTopView(period: 'day' | 'week' | 'month' | 'year') {
     .getRawMany();
 
   return movies;
+  }
+
+   async getAllMoviesWithEpisodesCount() {
+    return this.movieRepository
+      .createQueryBuilder('movie')
+      .leftJoinAndSelect('movie.episodes', 'episode')
+      .loadRelationCountAndMap('movie.episodesCount', 'movie.episodes')
+      .getMany();
+  }
+
+  /**
+   * Lấy chi tiết 1 movie + danh sách episodes
+   */
+  async getMovieWithEpisodes(id: number) {
+    const movie = await this.movieRepository.findOne({
+      where: { id },
+      relations: ['episodes'],
+    });
+
+    if (!movie) {
+      throw new NotFoundException(`Movie with id ${id} not found`);
+    }
+
+    return movie;
   }
   
   async getRecentlyAddedShows(page?: number, limit?: number) {
@@ -394,17 +393,8 @@ async findMovieByTopView(period: 'day' | 'week' | 'month' | 'year') {
   }
 
   async update(id: number, data: UpdateMovieDto) {
-  const movie = await this.movieRepository.preload({
-    id,
-    ...data,
-    updated_at: new Date(),
-  });
-
-  if (!movie) {
-    throw new NotFoundException(`Movie with id ${id} not found`);
-  }
-
-  return this.movieRepository.save(movie);
+  await this.movieRepository.update(id, data);
+    return this.findOne(id);
 }
 
 
