@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Comment } from '../../entities/comment.entity';
 import { User } from '../../entities/user.entity';
 import { Movie } from '../../entities/movie.entity';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { UpdateCommentDto } from './dto/update-comment.dto';
 
 @Injectable()
 export class CommentService {
@@ -58,7 +59,46 @@ export class CommentService {
     };
   }
 
-  async delete(id: number): Promise<void> {
-    await this.commentRepo.delete(id);
+  async delete(id: number, userId: number) {
+  const comment = await this.commentRepo.findOne({
+    where: { id },
+    relations: ['user'],
+  });
+
+  if (!comment) {
+    throw new NotFoundException('Comment not found');
   }
+
+  // chỉ cho xóa nếu là chủ comment hoặc admin
+  if (comment.user.id !== userId /* && !isAdmin(userId) */) {
+    throw new ForbiddenException('Not allowed to delete this comment');
+  }
+
+  await this.commentRepo.delete(id);
+  return { message: 'Comment deleted successfully' };
+  }
+  
+
+  // comment.service.ts
+async update(id: number, userId: number, updateDto: UpdateCommentDto) {
+  const comment = await this.commentRepo.findOne({
+    where: { id },
+    relations: ["user"],
+  });
+
+  if (!comment) {
+    throw new NotFoundException("Comment not found");
+  }
+
+  if (comment.user.id !== userId) {
+    throw new ForbiddenException("You can only edit your own comment");
+  }
+
+  comment.content = updateDto.content;
+  comment.update_at = new Date()
+  comment.edited = true;
+  return this.commentRepo.save(comment);
+}
+
+
 }

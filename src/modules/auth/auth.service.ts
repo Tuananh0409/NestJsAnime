@@ -43,7 +43,7 @@ export class AuthService {
 
     const refreshToken = this.jwtService.sign(payload, {
       secret: process.env.JWT_REFRESH_SECRET,
-      expiresIn: '7d',
+      expiresIn: '3d',
     });
 
     const hashedRefresh = await bcrypt.hash(refreshToken, 10);

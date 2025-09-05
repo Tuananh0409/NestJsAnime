@@ -5,8 +5,6 @@ import { CreateFollowDto } from './dto/create-follow.dto';
 @Controller('follow')
 export class FollowController {
   constructor(private readonly followService: FollowService) {}
-
-
   
   @Get(':idUser')
   getFollowByUser(@Param('idUser') idUser: number){

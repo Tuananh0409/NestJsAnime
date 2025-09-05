@@ -30,7 +30,7 @@ export class MovieController {
     return this.movieService.findMovieByTopView(period);
   }
 
-   @UseGuards(OptionalJwtAuthGuard)
+  @UseGuards(OptionalJwtAuthGuard)
   @Get('movie-detail/:slug')
   async getMovieBySlug(
     @Param('slug') slug: string,
@@ -46,11 +46,6 @@ export class MovieController {
     return await this.movieService.findMovieWatchingData(slug);
   }
 
-  // @Get(':id')
-  // findOne(@Param('id') id: number) {
-  //   return this.movieService.findOne(id);
-  // }
-
   
   @Get('new-comment')
   getMoviesByNewComment(
@@ -59,16 +54,16 @@ export class MovieController {
     return  this.movieService.getMoviesByNewComment(limit ? +limit : undefined)
   }
 
-@Get('recently-added-shows')
-getRecentlyAdded(
-  @Query('page') page?: string,
-  @Query('limit') limit?: string
-) {
-  return this.movieService.getRecentlyAddedShows(
-    page ? parseInt(page, 10) : 1,
-    limit ? parseInt(limit, 10) : undefined
-  );
-}
+  @Get('recently-added-shows')
+  getRecentlyAdded(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.movieService.getRecentlyAddedShows(
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : undefined
+    );
+  }
 
   @Get('category/:slug')
   getMoviesByCategory(
@@ -88,6 +83,11 @@ getRecentlyAdded(
     @Query('limit') limit = 10,
   ) {
     return this.movieService.searchMovies(keyword, Number(page), Number(limit));
+  }
+
+  @Get('banner')
+  async moviesBanner() {
+    return this.movieService.getMoviesBanner()
   }
   
   @Get('generate-slugs')

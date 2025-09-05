@@ -30,7 +30,7 @@ import { CommentBlog } from './entities/commentblog.entity';
       port: 3306,
       username: 'root',
       password: '',
-      database: 'anime',
+      database: 'webanime',
       entities: [User, View, Movie, MovieCategory, Comment, Follow, Episode, Category, Blog, CommentBlog],
       synchronize: true, 
     }),

@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty } from "class-validator";
+import { IsInt, IsNotEmpty, IsOptional } from "class-validator";
 
 export class CreateViewDto {
   @IsInt()
@@ -8,4 +8,8 @@ export class CreateViewDto {
   @IsInt()
   @IsNotEmpty()
   movie_id: number;
+
+  @IsInt()
+  @IsOptional() // vì có thể có phim không có tập (movie lẻ)
+  episode_id?: number;
 }

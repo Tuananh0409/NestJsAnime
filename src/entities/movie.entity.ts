@@ -64,6 +64,12 @@ export class Movie {
   @Column()
   original_title: string;
 
+  @Column({ default: false })
+  isBanner: boolean;
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  banner_img?: string;
+
   @OneToMany(() => Episode, (episode) => episode.movie)
   episodes: Episode[];
 

@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 import { Movie } from './movie.entity';
+import { Episode } from './episode.entity';
 
 @Entity()
 export class View {
@@ -23,4 +24,8 @@ export class View {
   @ManyToOne(() => Movie, (movie) => movie.views, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'movie_id' })
   movie: Movie;
+
+  @ManyToOne(() => Episode, (episode) => episode.views, { nullable: true })
+  @JoinColumn({ name: 'episode_id' })
+  episode: Episode
 }

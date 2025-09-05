@@ -19,6 +19,12 @@ export class Comment {
   @Column()
   created_at: Date;
 
+  @Column({ type: 'datetime', nullable: true })
+  update_at: Date;
+
+  @Column({ default: false })
+  edited: boolean;
+
   @ManyToOne(() => User, (user) => user.comments, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user: User;

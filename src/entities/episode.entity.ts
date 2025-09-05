@@ -4,8 +4,10 @@ import {
   Column,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { Movie } from './movie.entity';
+import { View } from './view.entity';
 
 @Entity()
 export class Episode {
@@ -15,6 +17,7 @@ export class Episode {
   @Column()
   episode_no: number;
 
+  
   @Column({ length: 50, nullable:true })
   title: string;
 
@@ -24,4 +27,7 @@ export class Episode {
   @ManyToOne(() => Movie, (movie) => movie.episodes, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'movie_id' })
   movie: Movie;
+
+  @OneToMany(() => View, (view) => view.episode)
+  views: View[];
 }

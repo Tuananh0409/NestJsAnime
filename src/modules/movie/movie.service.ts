@@ -59,6 +59,8 @@ export class MovieService {
       const diffMinutes = Math.floor(diffMs / 1000 / 60);
 
       return {
+        id: comment.id,
+        edited: comment.edited,
         content: comment.content,
         user: {
           id: comment.user.id,
@@ -116,6 +118,8 @@ export class MovieService {
     const formattedComments = movie.comments
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .map(comment => ({
+    id: comment.id,
+    edited: comment.edited,
     content: comment.content,
     user: {
       id: comment.user.id,
@@ -416,6 +420,12 @@ async findMovieByTopView(period: 'day' | 'week' | 'month' | 'year') {
     }
 
     return { message: 'Updated all slugs successfully', count: movies.length };
+  }
+
+  async getMoviesBanner() {
+    return  this.movieRepository.find({
+      where: { isBanner: true },
+    });
   }
 
   findAll() {
